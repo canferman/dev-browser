@@ -119,10 +119,13 @@ export async function serveRelay(options: RelayOptions = {}): Promise<RelayServe
   const TAB_WARNING_THRESHOLD = 3;
   const TAB_LIMIT = 5;
 
-  // Idle timeout: close pages with no CDP activity after 15 seconds.
+  // Idle timeout: close pages with no CDP activity after 60 seconds.
   // Page state (cookies, localStorage) persists in Chrome, so agents can
-  // re-open named pages cheaply. Short timeout keeps tab count minimal.
-  const IDLE_TIMEOUT_MS = 15 * 1000; // 15 seconds
+  // re-open named pages cheaply. 60s spans the gap between sequential
+  // `npx tsx` script runs (startup overhead + human think time) while still
+  // capping tab accumulation. Override via DEV_BROWSER_IDLE_TIMEOUT_MS env var.
+  const IDLE_TIMEOUT_MS =
+    parseInt(process.env.DEV_BROWSER_IDLE_TIMEOUT_MS ?? "", 10) || 60 * 1000;
   const IDLE_CHECK_INTERVAL_MS = 5 * 1000; // Check every 5 seconds
 
   // PDF storage for large printToPDF responses
@@ -860,6 +863,41 @@ export async function serveRelay(options: RelayOptions = {}): Promise<RelayServe
     });
   });
 
+  // Close orphaned about:blank tabs — tabs Chrome created but the relay never
+  // registered (e.g. after a Target.createTarget timeout). Called fire-and-forget
+  // after a createTarget failure to prevent resource exhaustion feedback loops.
+  async function closeOrphanTabs(): Promise<void> {
+    const result = (await sendToExtension({
+      method: "getAvailableTargets",
+      params: {},
+    })) as { targets: Array<{ tabId: number; targetId: string; url: string }> };
+
+    const registeredIds = new Set<string>();
+    for (const [, t] of connectedTargets) {
+      registeredIds.add(t.targetId);
+    }
+
+    const orphans = result.targets.filter(
+      (t) => t.url === "about:blank" && !registeredIds.has(t.targetId)
+    );
+
+    for (const orphan of orphans) {
+      try {
+        await sendToExtension({
+          method: "forwardCDPCommand",
+          params: { method: "Target.closeTarget", params: { targetId: orphan.targetId } },
+          timeout: 5000,
+        });
+      } catch {
+        // Ignore individual close failures — best effort
+      }
+    }
+
+    if (orphans.length > 0) {
+      log(`Orphan cleanup: closed ${orphans.length} unregistered about:blank tab(s)`);
+    }
+  }
+
   // Get or create a named page (namespaced by session)
   app.post("/pages", async (c) => {
     // Block requests during extension reconnect recovery
@@ -944,6 +982,7 @@ export async function serveRelay(options: RelayOptions = {}): Promise<RelayServe
       const result = (await sendToExtension({
         method: "forwardCDPCommand",
         params: { method: "Target.createTarget", params: { url: "about:blank" } },
+        timeout: 60000,
       })) as { targetId: string; tabId: number };
 
       // Wait for Target.attachedToTarget event to register the new target
@@ -1024,8 +1063,16 @@ export async function serveRelay(options: RelayOptions = {}): Promise<RelayServe
 
       throw new Error("Target created but not found in registry");
     } catch (err) {
+      const isTimeout = (err as Error).message?.includes("timeout");
+      if (isTimeout) {
+        closeOrphanTabs().catch((e) => log("Orphan cleanup error:", e));
+      }
+      const message = isTimeout
+        ? `Chrome tab creation timed out — browser may be under heavy load. ` +
+          `Close unused tabs and retry. (${(err as Error).message})`
+        : (err as Error).message;
       log("Error creating tab:", err);
-      return c.json({ error: (err as Error).message }, 500);
+      return c.json({ error: message }, 500);
     }
   });
 

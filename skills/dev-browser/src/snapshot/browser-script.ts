@@ -129,8 +129,12 @@ function computeBox(element) {
   }
   if (!isElementStyleVisibilityVisible(element, style))
     return { cursor, visible: false, inline: false };
-  const rect = element.getBoundingClientRect();
-  return { rect, cursor, visible: rect.width > 0 && rect.height > 0, inline: style.display === "inline" };
+  // Skip getBoundingClientRect() — it forces a layout flush on every element and
+  // causes Chrome to hang for 15+ seconds on heavy SPAs mid-render (React hydration,
+  // rapid DOM mutations, etc.). The CSS visibility checks above are sufficient:
+  // display:none and visibility:hidden are already excluded, so anything reaching
+  // here is considered visible for snapshot purposes.
+  return { cursor, visible: true, inline: style.display === "inline" };
 }
 
 function isElementVisible(element) {
@@ -138,10 +142,9 @@ function isElementVisible(element) {
 }
 
 function isVisibleTextNode(node) {
-  const range = node.ownerDocument.createRange();
-  range.selectNode(node);
-  const rect = range.getBoundingClientRect();
-  return rect.width > 0 && rect.height > 0;
+  // Avoid getBoundingClientRect() — it forces layout and hangs on heavy SPAs.
+  // A non-empty text node whose parent passed CSS visibility checks is visible enough.
+  return (node.nodeValue || '').trim().length > 0;
 }
 
 function elementSafeTagName(element) {
