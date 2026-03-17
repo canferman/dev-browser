@@ -51,8 +51,8 @@ For maximum stealth (real browser fingerprint, existing cookies), install the Ch
 ### Claude Code
 
 ```
-/plugin marketplace add sawyerhood/dev-browser
-/plugin install dev-browser@sawyerhood/dev-browser
+/plugin marketplace add canferman/dev-browser
+/plugin install dev-browser@canferman/dev-browser
 ```
 
 Restart Claude Code after installation.
@@ -66,7 +66,7 @@ Copy the skill to your skills directory:
 SKILLS_DIR=~/.claude/skills  # or ~/.codex/skills
 
 mkdir -p $SKILLS_DIR
-git clone https://github.com/sawyerhood/dev-browser /tmp/dev-browser-skill
+git clone https://github.com/canferman/dev-browser /tmp/dev-browser-skill
 cp -r /tmp/dev-browser-skill/skills/dev-browser $SKILLS_DIR/dev-browser
 rm -rf /tmp/dev-browser-skill
 ```
@@ -91,7 +91,7 @@ Dev Browser defaults to extension mode. The Chrome extension allows Dev Browser 
 
 **Option 1: Download ZIP and install (recommended)**
 
-1. Download the latest tracked ZIP directly: [dev-browser-extension-1.0.1-chrome.zip](https://github.com/sawyerhood/dev-browser/raw/main/extension/.output/dev-browser-extension-1.0.1-chrome.zip)
+1. Download the latest tracked ZIP directly: [dev-browser-extension-1.0.1-chrome.zip](https://github.com/canferman/dev-browser/blob/main/extension/.output/dev-browser-extension-1.0.1-chrome.zip)
 2. Unzip it to a permanent location (e.g., `~/.dev-browser-extension`)
 3. Open Chrome and go to `chrome://extensions`
 4. Enable "Developer mode" (toggle in top right)
@@ -182,7 +182,7 @@ Just ask Claude to interact with your browser:
 | Playwright Skill        | 8m 07s  | $1.45 | 38    | 67%     |
 | Claude Chrome Extension | 12m 54s | $2.81 | 80    | 100%    |
 
-_See [dev-browser-eval](https://github.com/SawyerHood/dev-browser-eval) for methodology._
+_See [dev-browser-eval](https://github.com/canferman/dev-browser-eval) for methodology._
 
 ### How It's Different
 
@@ -261,4 +261,4 @@ MIT
 
 ## Author
 
-[Sawyer Hood](https://github.com/sawyerhood)
+[canferman](https://github.com/canferman)
