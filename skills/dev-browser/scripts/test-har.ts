@@ -14,7 +14,7 @@ const HAR_PATH = join(import.meta.dirname, "../tmp/test-recording.har");
 async function main() {
   console.log("Testing HAR recording...\n");
 
-  const client = await connect();
+  const client = await connect({ mode: "standalone" });
 
   try {
     // Create a test page

@@ -17,7 +17,7 @@ async function main() {
 
   console.log(`Connecting to dev-browser at ${serverUrl}...`);
 
-  const client = await connect(serverUrl, { session: "pdf-test" });
+  const client = await connect(serverUrl, { mode: "extension", session: "pdf-test" });
 
   console.log("Connected. Getting page...");
 

@@ -15,7 +15,7 @@ const WACZ_PATH = join(import.meta.dirname, "../tmp/test-archive.wacz");
 async function main() {
   console.log("Testing WACZ creation...\n");
 
-  const client = await connect();
+  const client = await connect({ mode: "standalone" });
 
   try {
     // Create a test page

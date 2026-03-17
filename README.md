@@ -71,15 +71,21 @@ cp -r /tmp/dev-browser-skill/skills/dev-browser $SKILLS_DIR/dev-browser
 rm -rf /tmp/dev-browser-skill
 ```
 
-**Amp only:** Start the server manually before use:
+**Amp only:** Start the extension relay manually (default mode):
 
 ```bash
-cd ~/.claude/skills/dev-browser && npm install && npm run start-server
+cd ~/.claude/skills/dev-browser && npm install && ./start.sh
 ```
 
-### Chrome Extension (Optional)
+Use standalone only when you explicitly want a fresh/headless browser:
 
-The Chrome extension allows Dev Browser to control your existing Chrome browser instead of launching a separate Chromium instance. This gives you access to your logged-in sessions, bookmarks, and extensions.
+```bash
+cd ~/.claude/skills/dev-browser && npm install && ./server.sh --headless
+```
+
+### Chrome Extension (Default Mode, Recommended)
+
+Dev Browser defaults to extension mode. The Chrome extension allows Dev Browser to control your existing Chrome browser instead of launching a separate Chromium instance. This gives you access to your logged-in sessions, bookmarks, and extensions.
 
 **Installation:**
 
@@ -134,7 +140,7 @@ const client = await connect();
 const page = await client.page("github"); // Isolated to this session
 
 // To share pages between sessions, use the same session ID:
-const client = await connect("http://localhost:9222", { session: "shared-workspace" });
+const client = await connect({ mode: "extension", session: "shared-workspace" });
 ```
 
 **Stop the relay:**

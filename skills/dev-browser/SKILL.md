@@ -28,8 +28,9 @@ Browser automation that maintains page state across script executions. Write sma
 ## Choosing Your Approach
 
 - **Local/source-available sites**: Read the source code first to write selectors directly
-- **Unknown page layouts**: Use `getAISnapshot()` to discover elements and `selectSnapshotRef()` to interact with them
+- **Unknown page layouts**: Use ARIA snapshots (`getAISnapshot()` / `page.snapshot()`) to discover refs, then interact via `clickRef()`/`fillRef()` in extension mode or `selectSnapshotRef()` in standalone mode
 - **Visual feedback**: Take screenshots to see what the user sees
+- **Mode selection**: Default to extension mode for normal "test this page" tasks. Only use standalone when the user explicitly asks for standalone/headless/background execution (e.g., "arka planda yap"), CI, or local debugging.
 
 ## Setup
 
@@ -37,27 +38,18 @@ Two modes available on different ports. **Both can run simultaneously** - useful
 
 | Mode | Port | Use Case |
 |------|------|----------|
+| Extension | 9224 | User's Chrome, logged-in sessions (default) |
 | Standalone | 9222 | Fresh browser, debugging, CI/CD |
-| Extension | 9224 | User's Chrome, logged-in sessions |
 
-### Standalone Mode (Default)
-
-Launches a new Chromium browser for fresh automation sessions.
-
-```bash
-./skills/dev-browser/server.sh &
-```
-
-Add `--headless` flag if user requests it. **Wait for the `Ready` message before running scripts.**
-
-### Extension Mode
+### Extension Mode (Default)
 
 Connects to user's existing Chrome browser. Use this when:
 
-- The user is already logged into sites and wants you to do things behind an authed experience that isn't local dev.
-- The user asks you to use the extension
+- The user asks to test/interact with a page without requesting standalone/headless/background mode
+- The user is already logged into sites and wants authed flows
+- The user explicitly asks you to use the extension
 
-**Important**: The core flow is still the same. You create named pages inside of their browser. Use `connect({ mode: "extension" })` to connect.
+**Important**: The core flow is still the same. You create named pages inside of their browser. `connect()` defaults to extension mode.
 
 **Start the relay server:**
 
@@ -84,6 +76,22 @@ if (!info.extensionConnected) {
   console.log("Extension not connected - tell user to activate it");
 }
 ```
+
+### Standalone Mode (Explicit Request Only)
+
+Launches a new Chromium browser for isolated/background automation.
+
+Use standalone when:
+
+- The user explicitly asks for standalone mode
+- The user asks for headless/background execution (e.g., "arka planda yap")
+- You're running CI/local debugging without the extension
+
+```bash
+./skills/dev-browser/server.sh &
+```
+
+Add `--headless` flag if user requests it. **Wait for the `Ready` message before running scripts.**
 
 **Automatic session persistence:** The skill includes a SessionStart hook that exposes `CLAUDE_SESSION_ID` as an environment variable. When running in Claude Code:
 - Pages automatically persist across script executions within the same session
@@ -236,11 +244,11 @@ For scraping large datasets, intercept and replay network requests rather than s
 ## Client API
 
 ```typescript
-// Connect to standalone server (port 9222) - default
+// Connect to extension/relay server (port 9224) - default
 const client = await connect();
 
-// Connect to extension/relay server (port 9224)
-const client = await connect({ mode: "extension" });
+// Connect to standalone server (port 9222) - explicit
+const client = await connect({ mode: "standalone" });
 
 // Ephemeral session - pages auto-close on disconnect (useful for quick lookups)
 const client = await connect({ ephemeral: true });
@@ -268,8 +276,9 @@ const result = await client.cleanup("^about:blank$"); // Close tabs matching URL
 
 // ARIA Snapshot methods
 const snapshot = await client.getAISnapshot("name"); // Get accessibility tree (10s timeout)
-const snapshot = await client.getAISnapshot("name", { timeout: 5000 }); // Custom timeout
-const element = await client.selectSnapshotRef("name", "e5"); // Get element by ref
+const snapshotWithTimeout = await client.getAISnapshot("name", { timeout: 5000 }); // Custom timeout
+const standaloneClient = await connect({ mode: "standalone" });
+const element = await standaloneClient.selectSnapshotRef("name", "e5"); // Standalone only
 
 // Archiving (HAR recording auto-starts on page())
 const archivePath = await client.saveArchive("name"); // .zip with WACZ + HTML + PDF
@@ -375,10 +384,11 @@ Use ARIA snapshots to discover page elements. Returns YAML-formatted accessibili
 **Interacting with refs — standalone mode:**
 
 ```typescript
-const snapshot = await client.getAISnapshot("hackernews");
+const standaloneClient = await connect({ mode: "standalone" });
+const snapshot = await standaloneClient.getAISnapshot("hackernews");
 console.log(snapshot); // Find the ref you need
 
-const element = await client.selectSnapshotRef("hackernews", "e2");
+const element = await standaloneClient.selectSnapshotRef("hackernews", "e2");
 await element.click();
 ```
 

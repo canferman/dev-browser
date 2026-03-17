@@ -10,7 +10,10 @@ Always use Node.js/npm instead of Bun.
 # Install dependencies (from skills/dev-browser/ directory)
 cd skills/dev-browser && npm install
 
-# Start the dev-browser server
+# Start extension relay (default mode)
+cd skills/dev-browser && npm run start-extension
+
+# Start standalone server (explicit standalone/headless usage)
 cd skills/dev-browser && npm run start-server
 
 # Run dev mode with watch
@@ -77,9 +80,15 @@ import { serve } from "@/index.js";
    - Exposes CDP WebSocket endpoint on port 9223
    - Pages are registered by name and persist until explicitly closed
 
+   **Relay** (`serveRelay()` in `src/relay.ts`):
+   - Exposes HTTP API on port 9224 for extension mode
+   - Proxies CDP commands to the Chrome extension
+   - Reports extension connection state via `GET /`
+
 2. **Client** (`connect()` in `src/client.ts`):
    - Connects to server's HTTP API
    - Returns a unified `Page` interface regardless of mode
+   - **Default mode is extension** unless `mode: "standalone"` is explicitly passed
    - **Standalone mode:** Returns Playwright's real Page (structurally satisfies our `Page` interface)
    - **Extension mode:** Returns `CDPPage` (implements `Page` via HTTP RPC to relay's `/cdp` endpoint)
 
@@ -107,7 +116,7 @@ Extension-mode `CDPPage` also exposes extras not on the `Page` interface: `snaps
 ```typescript
 import { connect } from "@/client.js";
 
-const client = await connect("http://localhost:9222");
+const client = await connect(); // defaults to extension mode (9224)
 const page = await client.page("my-page"); // Gets existing or creates new
 await page.goto("https://example.com");
 await page.click("button.submit");
@@ -115,6 +124,10 @@ await page.fill("input#email", "test@example.com");
 const text = await page.locator("h1").textContent();
 // Page persists for future scripts
 await client.disconnect(); // Disconnects CDP but page stays alive on server
+
+// Explicit standalone usage:
+const standaloneClient = await connect({ mode: "standalone" });
+await standaloneClient.disconnect();
 ```
 
 ## Node.js Guidelines
