@@ -9,7 +9,10 @@ function updateUI(state: StateResponse): void {
   statusText.textContent = state.isActive ? "Active" : "Inactive";
 
   if (state.isActive) {
-    connectionStatus.textContent = state.isConnected ? "Connected to relay" : "Connecting...";
+    const portLabel = `port ${state.relayPort}`;
+    connectionStatus.textContent = state.isConnected
+      ? `Connected to relay (${portLabel})`
+      : `Connecting... (${portLabel})`;
     connectionStatus.className = state.isConnected
       ? "connection-status connected"
       : "connection-status connecting";

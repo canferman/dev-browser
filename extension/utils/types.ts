@@ -104,6 +104,7 @@ export interface SetStateMessage {
 export interface StateResponse {
   isActive: boolean;
   isConnected: boolean;
+  relayPort: number;
 }
 
 export type PopupMessage = GetStateMessage | SetStateMessage;

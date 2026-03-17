@@ -7,7 +7,7 @@
 
 import { createLogger } from "../utils/logger";
 import { TabManager } from "../services/TabManager";
-import { ConnectionManager } from "../services/ConnectionManager";
+import { ConnectionManager, RELAY_PORT } from "../services/ConnectionManager";
 import { CDPRouter } from "../services/CDPRouter";
 import { StateManager } from "../services/StateManager";
 import type { PopupMessage, StateResponse } from "../utils/types";
@@ -98,10 +98,11 @@ export default defineBackground(() => {
             sendResponse({
               isActive: state.isActive,
               isConnected,
+              relayPort: RELAY_PORT,
             });
           } catch (err) {
             logger.debug("Error handling getState:", err);
-            sendResponse({ isActive: false, isConnected: false });
+            sendResponse({ isActive: false, isConnected: false, relayPort: RELAY_PORT });
           }
         })();
         return true; // Async response
@@ -116,10 +117,11 @@ export default defineBackground(() => {
             sendResponse({
               isActive: state.isActive,
               isConnected,
+              relayPort: RELAY_PORT,
             });
           } catch (err) {
             logger.debug("Error handling setState:", err);
-            sendResponse({ isActive: false, isConnected: false });
+            sendResponse({ isActive: false, isConnected: false, relayPort: RELAY_PORT });
           }
         })();
         return true; // Async response
