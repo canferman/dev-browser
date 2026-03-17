@@ -87,15 +87,17 @@ cd ~/.claude/skills/dev-browser && npm install && ./server.sh --headless
 
 Dev Browser defaults to extension mode. The Chrome extension allows Dev Browser to control your existing Chrome browser instead of launching a separate Chromium instance. This gives you access to your logged-in sessions, bookmarks, and extensions.
 
-**Installation:**
+**Installation options:**
 
-1. Download `extension.zip` from the [latest release](https://github.com/sawyerhood/dev-browser/releases/latest)
-2. Unzip the file to a permanent location (e.g., `~/.dev-browser-extension`)
+**Option 1: Download ZIP and install (recommended)**
+
+1. Download the latest tracked ZIP directly: [dev-browser-extension-1.0.1-chrome.zip](https://github.com/sawyerhood/dev-browser/raw/main/extension/.output/dev-browser-extension-1.0.1-chrome.zip)
+2. Unzip it to a permanent location (e.g., `~/.dev-browser-extension`)
 3. Open Chrome and go to `chrome://extensions`
 4. Enable "Developer mode" (toggle in top right)
 5. Click "Load unpacked" and select the unzipped extension folder
 
-**Build from source (local):**
+**Option 2: Build from this repo and install locally**
 
 ```bash
 npm --prefix extension install

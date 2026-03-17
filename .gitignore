@@ -42,3 +42,8 @@ profiles/
 # WXT generated files
 .wxt/
 .output/
+
+# Keep packaged Chrome extension zip in git
+!extension/.output/
+extension/.output/*
+!extension/.output/dev-browser-extension-*-chrome.zip
