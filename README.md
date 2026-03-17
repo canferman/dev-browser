@@ -89,6 +89,17 @@ The Chrome extension allows Dev Browser to control your existing Chrome browser 
 4. Enable "Developer mode" (toggle in top right)
 5. Click "Load unpacked" and select the unzipped extension folder
 
+**Build from source (local):**
+
+```bash
+npm --prefix extension install
+npm run extension:zip
+```
+
+`npm run extension:zip` creates:
+- Unpacked extension: `extension/.output/chrome-mv3/` (use this with "Load unpacked")
+- ZIP artifact: `extension/.output/dev-browser-extension-<version>-chrome.zip`
+
 **Using the extension:**
 
 1. Click the Dev Browser extension icon in Chrome's toolbar

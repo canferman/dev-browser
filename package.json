@@ -11,6 +11,7 @@
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "extension:zip": "npm --prefix extension run zip",
     "prepare": "husky"
   },
   "lint-staged": {
